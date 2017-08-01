@@ -152,7 +152,7 @@ This is %s[.lua] version %s.
     if stat then os.exit(stat) end
   end
   function read_option()
-    if #arg == 0 then show_usage() end
+    if #arg == 0 then show_usage(0) end
     output_dir = "."; tex_opts = ""; driver_opts = "";
     eptex = false; uptex = false; latex = false;
     stop = false; interm = false; prologue = {}
@@ -194,14 +194,14 @@ This is %s[.lua] version %s.
         elseif aa:match("^%-od=") then
           driver_opts = aa:match("=(.*)")
         else
-          abort("unknown option", aa)
+          abort(1, "unknown option", aa)
         end
       else -- non-option
         insert(prologue, aa)
       end
     end
     if #prologue == 0 then
-      abort("No filename argument given, exiting.")
+      abort(1, "No filename argument given, exiting.")
     elseif #prologue > 1 then
       info("Multiple filename arguments? OK, I'll take the latter one.")
     end
