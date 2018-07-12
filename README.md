@@ -59,10 +59,12 @@ Usage: scxml2ltx[.lua] [-i <in_file>] [-o <out_file>] [-C] [-S|-s <params>]
 S(C)ee Also
 -----------
 
-  * [sctexdoc]: Another *essential* script by wtsnjp
+  * [sctexdoc]: An *essential* version of Texdoc, by wtsnjp
+  * [scllmk]: An *essential* version of llmk
   * [SC-tools]: *Essential* LaTeX packages
 
 [sctexdoc]: https://gist.github.com/wtsnjp/3bfcdb32420fa591c9fe641dbe932d38
+[scllmk]: https://github.com/zr-tex8r/scllmk
 [SC-tools]: https://github.com/zr-tex8r/SC-tools
 
 --------------------
