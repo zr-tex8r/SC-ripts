@@ -61,10 +61,12 @@ S(C)ee Also
 
   * [sctexdoc]: An *essential* version of Texdoc, by wtsnjp
   * [scllmk]: An *essential* version of llmk
+  * [scSATySFi]: An *essential* version of SATySFi
   * [SC-tools]: *Essential* LaTeX packages
 
 [sctexdoc]: https://gist.github.com/wtsnjp/3bfcdb32420fa591c9fe641dbe932d38
 [scllmk]: https://github.com/zr-tex8r/scllmk
+[scSATySFi]: https://github.com/zr-tex8r/scsatysfi
 [SC-tools]: https://github.com/zr-tex8r/SC-tools
 
 --------------------

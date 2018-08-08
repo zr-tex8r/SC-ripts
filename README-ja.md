@@ -61,10 +61,12 @@ S(C)ee Also
 
   * [sctexdoc]： “本質的”なTexdoc（wtsnjp氏作）
   * [scllmk]： “本質的”なllmk
+  * [scSATySFi]: “本質的”なSATySFi
   * [SC-tools]： “本質的”なLaTeXパッケージ
 
 [sctexdoc]: https://gist.github.com/wtsnjp/3bfcdb32420fa591c9fe641dbe932d38
 [scllmk]: https://github.com/zr-tex8r/scllmk
+[scSATySFi]: https://github.com/zr-tex8r/scsatysfi
 [SC-tools]: https://github.com/zr-tex8r/SC-tools
 
 --------------------
