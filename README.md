@@ -59,14 +59,20 @@ Usage: scxml2ltx[.lua] [-i <in_file>] [-o <out_file>] [-C] [-S|-s <params>]
 S(C)ee Also
 -----------
 
-  * [sctexdoc]: An *essential* version of Texdoc, by wtsnjp
+  * [sctexdoc]: An *essential* version of Texdoc, by @wtsnjp
   * [scllmk]: An *essential* version of llmk
   * [scSATySFi]: An *essential* version of SATySFi
+  * [scarticle-satysfi]: An *essential* document class for SATySFi
+  * [mdsc.satyh]: An *essential* document class for Markdown conversion with SATySFi, by @puripuri2100
+  * [scsnowman-log.satyh]: Displays fancy log messages in SATySFi, by @puripuri2100
   * [SC-tools]: *Essential* LaTeX packages
 
 [sctexdoc]: https://gist.github.com/wtsnjp/3bfcdb32420fa591c9fe641dbe932d38
 [scllmk]: https://github.com/zr-tex8r/scllmk
 [scSATySFi]: https://github.com/zr-tex8r/scsatysfi
+[scarticle-satysfi]: https://github.com/zr-tex8r/scarticle-satysfi
+[mdsc.satyh]: https://gist.github.com/puripuri2100/3290dd78ad7387b4bc30c61d1bb84df5
+[scsnowman-log.satyh]: https://gist.github.com/puripuri2100/e72bec99f96c4c3cfef7b2da3c95bd28
 [SC-tools]: https://github.com/zr-tex8r/SC-tools
 
 --------------------

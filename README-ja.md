@@ -59,14 +59,20 @@ Usage: scxml2ltx[.lua] [-i <in_file>] [-o <out_file>] [-C] [-S|-s <params>]
 S(C)ee Also
 -----------
 
-  * [sctexdoc]： “本質的”なTexdoc（wtsnjp氏作）
+  * [sctexdoc]： “本質的”なTexdoc（by @wtsnjp）
   * [scllmk]： “本質的”なllmk
   * [scSATySFi]: “本質的”なSATySFi
+  * [scarticle-satysfi]: SATySFi用の“本質的”な文書クラス
+  * [mdsc.satyh]: SATySFiのMarkdown変換用の“本質的”な文書クラス（by @puripuri2100）
+  * [scsnowman-log.satyh]: SATySFiの出力ログをチョットダケ素敵にする（by @puripuri2100）
   * [SC-tools]： “本質的”なLaTeXパッケージ
 
 [sctexdoc]: https://gist.github.com/wtsnjp/3bfcdb32420fa591c9fe641dbe932d38
 [scllmk]: https://github.com/zr-tex8r/scllmk
 [scSATySFi]: https://github.com/zr-tex8r/scsatysfi
+[scarticle-satysfi]: https://github.com/zr-tex8r/scarticle-satysfi
+[mdsc.satyh]: https://gist.github.com/puripuri2100/3290dd78ad7387b4bc30c61d1bb84df5
+[scsnowman-log.satyh]: https://gist.github.com/puripuri2100/e72bec99f96c4c3cfef7b2da3c95bd28
 [SC-tools]: https://github.com/zr-tex8r/SC-tools
 
 --------------------
