@@ -10,7 +10,8 @@ snowman = nil
 unpack = unpack or table.unpack
 floor, ceil, abs = math.floor, math.ceil, math.abs
 do
-  TU = 2^20 -- TFM units per a point
+  TU = floor(2^20) -- TFM units per a point
+  local function bp(n) return floor(2^n) end
   function int(v)
     return (v < 0) and ceil(v) or floor(v)
   end
@@ -28,14 +29,14 @@ do
     sure(type(v) == "number", 1)
     local k, r, v = {...}, {}, floor(math.max(0, v))
     for i = #k, 1, -1 do
-      r[i] = v % 2^k[i]; v = floor(v / 2^k[i])
+      r[i] = v % bp(k[i]); v = floor(v / bp(k[i]))
     end
     return unpack(r)
   end
   --- glemish(number)
   -- A "fixed-random" function.
   function glemish(v)
-    return floor(abs(math.sin(v)) * 2^48) % 2^40
+    return floor(abs(math.sin(v)) * bp(48)) % bp(40)
   end
   --- temper(ctype)
   -- The height of snowman for a ctype in percentage.
@@ -107,7 +108,7 @@ do
         return self
       end;
       setsnum = function(self, b, v)
-        local sv, av, bb = (v < 0), floor(abs(v)), 256^b
+        local sv, av, bb = (v < 0), floor(abs(v)), floor(256^b)
         av = av % bb
         if sv then av = bb - av end
         self:setunum(b, av)
