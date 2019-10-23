@@ -1,7 +1,7 @@
 -- scmakesvf.lua
 prog_name = "scmakesvf"
-version = "0.2"
-mod_date = "2017/08/18"
+version = "0.2.1"
+mod_date = "2019/10/22"
 ---------------------------------------- global parameters
 baseshift, kanatfm, ucs, jistfm, ucsqtfm, chotai, useset3 = nil
 atfmname, vfname, vtfmname = nil
@@ -354,10 +354,30 @@ do
     return false
   end
   local function show_usage(stat)
-    local options_utf8 = [=[
-options:
+    local sjis = is_sjis()
+    io.stderr:write(([=[
+%s version %s -- make Snowman VF file from a JFM file.
+Usage:
+%%%% %s [<options>] <TFMfile> <PSfontTFM>
+]=]):format(prog_name:upper(), version, prog_name), [=[
+  <TFMfile>:   Name of input pTeX/upTeX JFM file.
+               The basename is inherited by the name of output VF file.
+  <PSfontTFM>: Name of output PSfont JFM file.
+Options:
+-8 <number>  Unicode codepoint of the output character (snowman)
+]=], ((sjis) and (
+"-C           \146\183\145\204\131\130\129[\131h\n"..
+"-K <PS-TFM>  \148\241\138\191\142\154\149\148\151p\130\201\141\236\144\172\130\183\130\233PS\131t\131H\131\147\131gTFM\150\188\n"..
+"-b <\144\148\146l>    \131x\129[\131X\131\137\131C\131\147\149\226\144\179\n"..
+"             \149\182\142\154\130\204\141\130\130\179\130\2401000\130\198\130\181\130\196\144\174\144\148\130\197\142w\146\232\n"..
+"             \131v\131\137\131X\130\197\149\182\142\154\130\170\137\186\130\170\130\232\129A\131}\131C\131i\131X\130\197\149\182\142\154\130\170\143\227\130\170\130\233\n"..
+"-m           \143c\143\145\130\171\142\158\130\201\131N\131I\129[\131g(\129f\129h)\130\204\145\227\130\237\130\232\130\201\131~\131j\131\133\129[\131g(\129\140\129\141)\130\240\142g\151p\n"..
+"-a <AFMfile> AFM\131t\131@\131C\131\139\150\188\129i\130\169\130\200\139l\130\223\142\158\130\201\142g\151p\129j\n"..
+"-k <\144\148\146l>    \130\169\130\200\139l\130\223\131}\129[\131W\131\147\142w\146\232\n"..
+"             \149\182\142\154\149\157\130\2401000\130\198\130\181\130\196\144\174\144\148\130\197\142w\146\232\129B-a\131I\131v\131V\131\135\131\147\130\198\139\164\130\201\142g\151p\n"
+) or [=[
 -C           長体モード
--K <TFMfile> 非漢字部用に作成するPSフォントTFM名
+-K <PS-TFM>  非漢字部用に作成するPSフォントTFM名
 -b <数値>    ベースライン補正
              文字の高さを1000として整数で指定
              プラスで文字が下がり、マイナスで文字が上がる
@@ -365,40 +385,19 @@ options:
 -a <AFMfile> AFMファイル名（かな詰め時に使用）
 -k <数値>    かな詰めマージン指定
              文字幅を1000として整数で指定。-aオプションと共に使用
+]=]), [=[
+-i           Start mapped font ID from No. 0
 -u <Charset> UCS mode
              <Charset> gb : GB,  cns : CNS,  ks : KS
                        jis : JIS,  jisq : JIS quote only
--J <TFMfile> JIS encoded PS font TFM name for quote, double quote (with UCS mode)
--U <TFMfile> UCS encoded PS font TFM name for quote, double quote (with UCS mode)
--3           use set3 (with UCS mode)
--H           use half-width katakana (with UCS mode)
--i           font ID from No.0
--8 <number>  codepoint of the output character (snowman)
-]=]
-    local options_sjis = "options:\n".. -- options_utf8 reencoded in Shift_JIS
-"-C           \146\183\145\204\131\130\129[\131h\n"..
-"-K <TFMfile> \148\241\138\191\142\154\149\148\151p\130\201\141\236\144\172\130\183\130\233PS\131t\131H\131\147\131gTFM\150\188\n"..
-"-b <\144\148\146l>    \131x\129[\131X\131\137\131C\131\147\149\226\144\179\n"..
-"             \149\182\142\154\130\204\141\130\130\179\130\2401000\130\198\130\181\130\196\144\174\144\148\130\197\142w\146\232\n"..
-"             \131v\131\137\131X\130\197\149\182\142\154\130\170\137\186\130\170\130\232\129A\131}\131C\131i\131X\130\197\149\182\142\154\130\170\143\227\130\170\130\233\n"..
-"-m           \143c\143\145\130\171\142\158\130\201\131N\131I\129[\131g(\129f\129h)\130\204\145\227\130\237\130\232\130\201\131~\131j\131\133\129[\131g(\129\140\129\141)\130\240\142g\151p\n"..
-"-a <AFMfile> AFM\131t\131@\131C\131\139\150\188\129i\130\169\130\200\139l\130\223\142\158\130\201\142g\151p\129j\n"..
-"-k <\144\148\146l>    \130\169\130\200\139l\130\223\131}\129[\131W\131\147\142w\146\232\n"..
-"             \149\182\142\154\149\157\130\2401000\130\198\130\181\130\196\144\174\144\148\130\197\142w\146\232\129B-a\131I\131v\131V\131\135\131\147\130\198\139\164\130\201\142g\151p\n"..
-"-u <Charset> UCS mode\n"..
-"             <Charset> gb : GB,  cns : CNS,  ks : KS\n"..
-"                       jis : JIS,  jisq : JIS quote only\n"..
-"-J <TFMfile> JIS encoded PS font TFM name for quote, double quote (with UCS mode)\n"..
-"-U <TFMfile> UCS encoded PS font TFM name for quote, double quote (with UCS mode)\n"..
-"-3           use set3 (with UCS mode)\n"..
-"-H           use half-width katakana (with UCS mode)\n"..
-"-i           font ID from No.0\n"..
-"-8 <number>  codepoint of the output character (snowman)"
-    io.stderr:write(([[
-%s ver.%s -- make Snowman VF file.
-%%%% %s [<options>] <TFMfile> <PSfontTFM>
-]]):format(prog_name:upper(), version, prog_name))
-    io.stderr:write((is_sjis()) and options_sjis or options_utf8)
+                       custom : Use user-defined CHARSET from <CNFfile>
+Options below are effective only in UCS mode:
+-J <PS-TFM>  Map single/double quote to another JIS-encoded PSfont TFM
+-U <PS-TFM>  Map single/double quote to another UCS-encoded PSfont TFM
+-3           Use set3, that is, enable non-BMP characters support
+-H           Use half-width katakana
+Inform bug reports at <https://github.com/zr-tex8r/SC-ripts/issues>.
+]=])
     os.exit(stat)
   end
   local pat_tfm = "%.[Tt][Ff][Mm]$"
@@ -463,7 +462,6 @@ options:
       abort(100, 0, "No AFM file for kanatume.")
     end
     if err or #arg - idx ~= 1 then
-    info(idx, #arg)
       show_usage(0)
     end
     atfmname = arg[idx]
