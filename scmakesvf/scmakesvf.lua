@@ -1,10 +1,10 @@
 -- scmakesvf.lua
 prog_name = "scmakesvf"
-version = "0.2.1"
-mod_date = "2019/10/22"
+version = "0.3.0"
+mod_date = "2019/10/25"
 ---------------------------------------- global parameters
 baseshift, kanatfm, ucs, jistfm, ucsqtfm, chotai, useset3 = nil
-atfmname, vfname, vtfmname = nil
+atfmname, vfname, vtfmname, usertable, hankana = nil
 snowman = nil
 ---------------------------------------- helpers
 unpack = unpack or table.unpack
@@ -43,6 +43,30 @@ do
   local temper_ = { 100, 25, 50, 0, 75 }
   function temper(c)
     return temper_[c] or (42 * c % 100)
+  end
+  --- kpse_find_file(fname, ftype)
+  local kpse = nil
+  function kpse_find_file(fname, ftype)
+    if not kpse then
+      pcall(function()
+        kpse = require 'kpse'
+        kpse.set_program_name('luatex')
+      end)
+    end
+    if kpse then
+      return kpse.find_file(fname, ftype, true)
+    else
+      local h = io.open(fname, 'rb')
+      if not h then return nil end
+      h:close()
+      return fname
+    end
+  end
+  --- to_seq(iter)
+  function to_seq(iter)
+    local t = {}
+    for s in iter do table.insert(t, s) end
+    return t
   end
 end
 ---------------------------------------- class 'reader'
@@ -147,8 +171,8 @@ do
   --- get_tfm(filename)
   -- Returns a object that contains the summary for the given TFH file.
   function get_tfm(file)
-    local fp = io.open(file, "rb")
-    if not fp then abort(0, 0, "%s is not found.", file) end
+    local fp = io.open(file..'.tfm', 'rb') or io.open(file, 'rb')
+    if not fp then abort(0, 0, "Cannot open %s.tfm for input.", file) end
     local tfm = make_cdata(fp:read("*a"))
     fp:close()
     -- parse it
@@ -207,7 +231,7 @@ do
     "\0\0\0\0\0\0\0\0\0\0\0\0"
   function make_tfm(name)
     local fp = io.open(name..".tfm", "wb")
-    if not fp then abort(100, 0, "I cannot create TFM file, %s.", name) end
+    if not fp then abort(100, 0, "I cannot create TFM file, %s.tfm.", name) end
     fp:write(raw_tfm)
     fp:close()
   end
@@ -232,6 +256,13 @@ do -- using generator pattern...
         coroutine.yield(c)
       end
     end;
+    custom = function (charset)
+      for k = 1, #charset do
+        for c = charset[k].min, charset[k].max do
+          coroutine.yield(c)
+        end
+      end
+    end;
   }
   local function codespace_next(co, cur)
     local ok, nxt = coroutine.resume(co)
@@ -239,8 +270,9 @@ do -- using generator pattern...
   end
   --- codespace(name)
   -- Returns the iterator (for generic FOR statements)
-  function codespace(name)
-    local co = coroutine.create(sure(codespace_gen[name], 2))
+  function codespace(name, charset)
+    local f = sure(codespace_gen[name], 2)
+    local co = coroutine.create(function() f(charset) end)
     return codespace_next, co, nil
   end
 end
@@ -293,11 +325,12 @@ do
       end
     end
     -- char packets
-    local csp = (ucs) and ((useset3) and "ucs3" or "ucs") or "jis"
+    local csp = (ucs == 'custom') and 'custom' or
+        (ucs) and ((useset3) and "ucs3" or "ucs") or "jis"
     local ctype, cinfo, bsh, sm = fm.ctype, fm.cinfo, baseshift, snowman
     local bsd, bsl = (bsh.u - bsh.l) * fm.zh / 1000, bsh.l * fm.zh / 1000
     local cwd0 = cinfo[0].wd
-    for cc in codespace(csp) do
+    for cc in codespace(csp, usertable.charset) do
       local glm1, glm2 = bit_scan(glemish(cc), 16, 16)
       local ti = ctype[cc] or 0; local cin = cinfo[ti]
       local right, down = 0, bsd * (glm1 / 65536) + bsl
@@ -335,10 +368,92 @@ do
     abort(1, ...)
   end
 end
+---------------------------------------- usertable
+do 
+  function get_usertable(fname)
+    if not fname then -- not specified
+      return {}
+    end
+    local fp = io.open(fname, 'r')
+    if not fp then
+      abort(1, 0, "Cannot find %s!", fname)
+    end
+    local lno, err, char_max, charset_mode = 0, nil, -2, false
+    local replace, move, charset = {}, {}, {}
+    while true do
+      local line = fp:read('*l'); lno = lno + 1
+      if not line then break end
+      if not line:match('^[%%+]') then charset_mode = false end
+      line = line:gsub('%%.*', '')
+      if line ~= '' then
+        local tok, match
+        if line:match('\t') then
+          match = line:gmatch('[^\t]+'); tok = match()
+        else tok = line..'\n' -- !!
+        end
+        if tok == 'REPLACE' then
+          local cp = tonumber(match() or '', 16)
+          local ncp = tonumber(match() or '', 16)
+          if not cp or not ncp or match() then
+            err = 'taberr'; break
+          end
+          table.insert(replace, { codepoint = cp, newcodepoint = ncp })
+        elseif tok == 'MOVE' then
+          local cp = tonumber(match() or '', 16)
+          local mr = tonumber(match() or '', 10)
+          local md = tonumber(match() or '', 10)
+          if not cp or not mr or not md or match() then
+            err = 'taberr'; break
+          end
+          table.insert(move, {
+            codepoint = cp, moveright = mr, movedown = md
+          })
+        elseif tok == 'CHARSET' or (tok == '+' and charset_mode) then
+          charset_mode = true
+          line = table.concat(to_seq(match), ',')
+          for tok in line:gmatch('[^,\t]+') do
+            local ch0, ch1 = tok:match('^(.*)%.%.(.*)$')
+            if ch0 and ch1 then
+              ch0 = tonumber(ch0, 16)
+              if not ch0 or ch0 <= char_max then err = 'codeerr'; break end
+              ch1 = tonumber(ch1, 16)
+              if not ch1 or ch1 <= ch0 then err = 'codeerr'; break end
+            else
+              ch0 = tonumber(tok, 16); ch1 = ch0
+              if not ch0 or ch0 <= char_max then err = 'codeerr'; break end
+            end
+            if char_max == ch0 - 1 then
+              charset[#charset].max = ch1
+            else
+              table.insert(charset, { min = ch0, max = ch1 })
+            end
+            char_max = ch1
+          end
+          if err then break end
+        else
+          abort(1, 0, "Unknown setting %s found in %s (line %d)!",
+              tok or line, fname, lno)
+        end
+      end
+    end
+    if err == 'taberr' then 
+      abort(1, 0, "Error in user-defined table file %s (line %d)!",
+          fname, lno)
+    elseif err == 'codeerr' then 
+      abort(1, 0, "Character codes must be given in ascending order (line %d)!",
+          lno)
+    end
+    return { 
+      replace = (#replace > 0) and replace or nil;
+      move = (#move > 0) and move or nil;
+      charset = (#charset > 0) and charset or nil;
+    }
+  end
+end
 ---------------------------------------- main
 do
   local ucs_param = {
-    jis = 1; jisq = 1; gb = 1; cns = 1; ks = 1
+    jis = 1; jisq = 1; gb = 1; cns = 1; ks = 1; custom = 1
   }
   local function is_sjis(stat)
     if os.type == "windows"
@@ -363,6 +478,8 @@ Usage:
   <TFMfile>:   Name of input pTeX/upTeX JFM file.
                The basename is inherited by the name of output VF file.
   <PSfontTFM>: Name of output PSfont JFM file.
+  Note: The JFM given by PSfontTFM must be encoded in Unicode
+  regardless of '-u' switch (without abuse of '-8').
 Options:
 -8 <number>  Unicode codepoint of the output character (snowman)
 ]=], ((sjis) and (
@@ -387,6 +504,9 @@ Options:
              文字幅を1000として整数で指定。-aオプションと共に使用
 ]=]), [=[
 -i           Start mapped font ID from No. 0
+-e           Enhanced mode; the horizontal shift amount is determined
+             from the glue/kern table of <TFMfile> input
+-t <CNFfile> Use <CNFfile> as a configuration file
 -u <Charset> UCS mode
              <Charset> gb : GB,  cns : CNS,  ks : KS
                        jis : JIS,  jisq : JIS quote only
@@ -414,19 +534,27 @@ Inform bug reports at <https://github.com/zr-tex8r/SC-ripts/issues>.
     else return file
     end
   end
+  local function check_distinct(name1, name2)
+    local equal = (name1 == name2) -- FIXME
+    if equal then
+      abort(100, 0, "Invalid usage: input TFM and output TFM must be different.")
+    end
+  end
   function read_option()
     local kanatume, afmname = -1 -- dummy params
-    chotai = false; useset3 = false
+    chotai = false; useset3 = false; hankana = false
     baseshift = "0"; snowman = "2603"
     if #arg == 0 then show_usage(0) end
-    local err, idx = false, 1
+    local err, idx, rarg = false, 1, {}
     while idx <= #arg do
-      if arg[idx]:sub(1, 1) ~= "-" then break end
       local opt = arg[idx]; idx = idx + 1
       local ii, oa = 2, nil
+      if opt:sub(1, 1) ~= '-' then
+        table.insert(rarg, opt); ii = #opt + 1
+      end
       while ii <= #opt do
         local oo = opt:sub(ii, ii); ii = ii + 1
-        if ("KbakuJU8"):find(oo) then -- with arg
+        if ('kKabuJUt8'):find(oo) then -- with arg
           if ii > #opt then
             oa = arg[idx]; idx = idx + 1; ii = #opt + 1
           else
@@ -436,40 +564,72 @@ Inform bug reports at <https://github.com/zr-tex8r/SC-ripts/issues>.
             info("option requires an argument -- " .. oo)
             err = true; break
           end
-          if oo == "K" then     kanatfm = oa
+          if oo == "k" then kanatume = tonumber(oa) or 0
+          elseif oo == "K" then kanatfm = oa
+          elseif oo == "a" then
+            afmname = kpse_find_file(oa, 'afm')
+            if not afmname then
+              abort(100, 0, "no AFM file, %s.", oa)
+            end
           elseif oo == "b" then baseshift = oa
-          elseif oo == "a" then afmname = oa
-          elseif oo == "k" then kanatume = tonumber(oa) or 0
           elseif oo == "u" then
             if ucs_param[oa] then ucs = oa
-            else info(0, "Charset is not set")
+            else info(0, "[Warning] Charset is not set"); ucs = ''
             end
           elseif oo == "J" then jistfm = oa
           elseif oo == "U" then ucsqtfm = oa
+          elseif oo == "t" then usertable = oa
           elseif oo == "8" then snowman = oa
           end
         elseif oo == "C" then chotai = true
         elseif oo == "m" then -- minute = true
         elseif oo == "3" then useset3 = true
-        elseif oo == "H" then -- hankana = true
+        elseif oo == "H" then hankana = true
         elseif oo == "i" then -- fidzero = true
+        elseif oo == "e" then -- enhanced = true
         else info("invalid option -- "..oo); err = true; break
         end
       end
-      if err then break end
+      if err then
+        show_usage(0)
+      end
     end
     if kanatume >= 0 and not afmname then
       abort(100, 0, "No AFM file for kanatume.")
     end
-    if err or #arg - idx ~= 1 then
+    if #rarg ~= 2 then
       show_usage(0)
     end
-    atfmname = arg[idx]
-    vfname = basename(arg[idx]):gsub(pat_tfm, "")..".vf"
-    vtfmname = arg[idx + 1]:gsub(pat_tfm, "")
+    atfmname = rarg[1]:gsub(pat_tfm, '')
+    atfmname_base = basename(rarg[1])
+    vfname = atfmname_base..'.vf'
+    vtfmname = rarg[2]:gsub(pat_tfm, '')
+    check_distinct(vtfmname, atfmname)
     kanatfm = kanatfm and kanatfm:gsub(pat_tfm, "")
+    check_distinct(kanatfm, atfmname_base)
+    if not ucs then
+      local function force(opt, oname, value)
+        if opt == value then return value end
+        info(0, "[Warning] Option %s invalid in non-UCS mode, ignored.", oname)
+        return value
+      end
+      jistfm = force(jistfm, '-J', nil)
+      ucsqtfm = force(ucsqtfm, '-U', nil)
+      useset3 = force(useset3, '-3', false)
+      hankana = force(hankana, '-H', false)
+    end
     jistfm = jistfm and jistfm:gsub(pat_tfm, "")
+    check_distinct(jistfm, atfmname_base)
     ucsqtfm = ucsqtfm and ucsqtfm:gsub(pat_tfm, "")
+    check_distinct(ucsqtfm, atfmname_base)
+    usertable = get_usertable(usertable)
+    if ucs ~= 'custom' and usertable.charset then
+      info(0, "[Warning] Custom charset is defined in usertable\n"..
+              "[Warning]   but it will be ignored.")
+    end
+    if ucs == 'custom' and not usertable.charset then
+      abort(101, 0, "No custom charset definition in usertable.")
+    end
     local bs, sm = {}, {}
     for v in baseshift:gmatch("[^,]+") do
       table.insert(bs, tonumber(v) or 0)
