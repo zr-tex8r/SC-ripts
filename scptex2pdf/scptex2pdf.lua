@@ -1,12 +1,12 @@
 -- scptex2pdf.lua
 prog_name = "scptex2pdf"
-version = "0.2"
-mod_date = "2017/07/19"
+version = "0.3"
+mod_date = "2020/03/07"
 ---------------------------------------- global parameters
 driver = "dvipdfmx"
 prologue, src_file = nil
 output_dir, tex_opts, driver_opts = nil
-eptex, uptex, latex, stop, interm = nil
+eptex, uptex, latex, latexdev, stop, interm = nil
 ---------------------------------------- snowman
 whatever = [[
        ____
@@ -56,6 +56,7 @@ do
     -- engine name
     local engine = (latex) and "platex" or (eptex) and "eptex" or "ptex"
     if uptex then engine = engine:gsub("p", "up") end
+    if latexdev then engine = engine.."-dev" end
     kpse.set_program_name(engine)
     -- job name
     local src = slashify(src_file)
@@ -114,14 +115,15 @@ do
   local function show_usage(stat)
     io.stdout:write(([[
 [texlua] %s[.lua] { option | basename[.tex] } ... 
-options: -v  version
-         -h  help
-         -help print full help (installation, TeXworks setup)
-         -e  use eptex class of programs
-         -u  use uptex class of programs
-         -l  use latex based formats
-         -s  stop at dvi
-         -i  retain intermediate files
+options: -v     version
+         -h     help
+         -help  print full help (installation, TeXworks setup)
+         -e     use eptex class of programs
+         -u     use uptex class of programs
+         -l     use latex based formats
+         -ld    use latex-dev based formats
+         -s     stop at dvi
+         -i     retain intermediate files
          -ot '<opts>' extra options for TeX
          -od '<opts>' extra options for dvipdfmx
          -output-directory '<dir>' directory for created files
@@ -146,7 +148,7 @@ This is %s[.lua] version %s.
     io.stdout:write(rp..cr..rx.." R E A D   M E "..rx..cr..rc..cr)
     show_whatever("How come you keep writing in the",
         "Japanese language or such things?",
-        "You should rather make snowman,",
+        "You should rather make snowman document,",
         "because it's far fancier!!")
     io.stdout:write(rc..cr..rp..cr)
     if stat then os.exit(stat) end
@@ -154,7 +156,7 @@ This is %s[.lua] version %s.
   function read_option()
     if #arg == 0 then show_usage(0) end
     output_dir = "."; tex_opts = ""; driver_opts = "";
-    eptex = false; uptex = false; latex = false;
+    eptex = false; uptex = false; latex = false; latexdev = false
     stop = false; interm = false; prologue = {}
     local idx = 1
     while idx <= #arg do
@@ -181,6 +183,8 @@ This is %s[.lua] version %s.
           uptex = true
         elseif aa == "-l" then
           latex = true
+        elseif aa == "-ld" then
+          latex = true; latexdev = true
         elseif aa == "-s" then
           stop = true
         elseif aa == "-i" then
