@@ -1,4 +1,69 @@
 <!DOCTYPE html>
-<html><title>It works!</title>
+<html>
+<meta charset="UTF-8">
+<title>某ZR氏のホームページ</title>
+<style>
+@keyframes blink {
+  75% { opacity: 0.0; }
+}
+body {
+  background: #CEF;
+}
+h1 {
+  background: #FFF;
+  width: 50%;
+  margin: 12px auto;
+  border: 6px ridge #ddd;
+  text-align: center;
+}
+h2 {
+  width: 100%;
+  margin: 6px auto;
+  border-top: 4px groove #ddd;
+  border-bottom: 4px groove #ddd;
+  text-align: center;
+}
+span.label {
+  background: #F42;
+  color: #FF9;
+  padding: 2px 4px 1px;
+  font: bold 50% serif;
+}
+span.blink {
+  animation: blink 1s step-end infinite;
+}
+marquee.std {
+  background: #FF9;
+  color: #F42;
+  font: bold italic 150% serif;
+}
+img.disp {
+  display: block;
+  width: 50%;
+  background: #FFF;
+  margin: 6px auto;
+  padding: 10px;
+}
+.primary {
+  color: #24F;
+}
+.alert {
+  color: #F42;
+}
+</style>
+</html>
 <body>
-<h1>It works!</h1>
+<h1><span class="primary">某ZR氏</span>のホームページ</h1>
+<div>
+<marquee class="std" behavior="alternate">Welcome to My Home Page!</marquee>
+</div>
+<div>
+<h2>お知らせ<span class="label"><span class="blink">NEW!!</span></span></h2>
+<div><img class="disp" src="scmtpeace5.png"></div>
+</div>
+<hr>
+<div class="footer">
+<small>Sorry, Japanese only. このホームページはリンクフリーです。</small>
+</div>
+</body>
+</html>
