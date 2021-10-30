@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SourceHanSerif-VF: A variable font for snowman comedians</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style type="text/css">
+    @font-face {
+      src: url('font/SourceHanSerif-VF-subset.ttf') format("TrueType");
+      font-family: "Source Han Serif VF";
+    }
+    .my-fontDisplay {
+      font-size: 800%;
+      text-align: center;
+    }
+    .my-sc {
+      font-family: "Source Han Serif VF";
+      font-variation-settings: "wght" 100;
+    }
+    .my-label {
+      display: inline-block;
+      width: 4em;
+      text-align: left;
+      font-weight: bold;
+    }
+    .my-value {
+      display: inline-block;
+      width: 5em;
+      text-align: right;
+      font-weight: bold;
+    }
+    .my-slider {
+      width: 100%;
+    }
+    .my-sampleText {
+      font-size: 250%;
+      font-family: "游明朝", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
+      line-height: 1.75;
+    }
+    .my-sampleText p {
+      margin-top: 0; margin-bottom: 0;
+      text-indent: 1em;
+    }
+    .my-sampleText .my-sc {
+      font-size: 120%;
+    }
+    </style>
+
+    <script>
+    const findCssRule = (selector) => {
+      for (css of document.styleSheets) {
+        try {
+          for (rule of css.cssRules) {
+            if (rule.selectorText === selector)
+              return rule;
+          }
+        } catch (e) {};
+      }
+      throw new Error(`rule not found: ${selector}`);
+    };
+    window.addEventListener("load", (event) => {
+      const sldMood = document.getElementById("sldMood");
+      const txtMood = document.getElementById("txtMood");
+      const txtMoodCss = document.getElementById("txtMoodCss");
+      const mySc = findCssRule(".my-sc");
+      const refreshMood = () => {
+        txtMood.textContent = sldMood.value;
+        txtMoodCss.textContent = sldMood.value;
+        mySc.style.fontVariationSettings = `"wght" ${sldMood.value}`;
+      };
+      sldMood.addEventListener("input", refreshMood);
+      refreshMood();
+    });
+    </script>
+
+  </head>
+
+  <body>
+
+    <section class="hero is-dark is-bold is-small">
+      <div class="hero-body">
+        <h1 class="title">SourceHanSerif-VF</h1>
+        <h2 class="subtitle">A varaible font for snowman comedians</h2>
+      </div>
+    </section>
+
+    <main>
+      <div class="columns">
+        <div class="column is-7">
+          <div class="box">
+            <div class="my-fontDisplay">
+            <span class="my-sc"><span class="my-scRed">☃</span><span class="my-scBlue">☃</span><span class="my-scGreen">☃</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box">
+            <div class="title is-3">Variable axis</div>
+            <div class="container">
+              <div>
+                <span class="my-label">wght</span>
+                <span id="txtMood" class="my-value">100</span>
+              </div>
+              <div>
+                <input type="range" id="sldMood" class="my-slider" min="100" max="900" value="100" step="1">
+              </div>
+            </div>
+          </div>
+          <div class="content">
+            <pre>font-variation-settings: "wght" <span id="txtMoodCss">100</span>;</pre>
+          </div>
+        </div>
+      </div>
+      <div class="box">
+        <div class="my-sampleText">
+          <p class="my-sc">山路を登りながら、かう考へた。</p>
+          <p class="my-sc">智に働けば、ゆきだるま☃。情に棹させば、ゆきだるま☃。意地を通せば、ゆきだるま☃。兎角に人の世は、ゆきだるま☃。</p>
+        </div>
+      </div>
+    </main>
+
+  </body>
+</html>
