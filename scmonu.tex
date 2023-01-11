@@ -1,0 +1,32 @@
+\documentclass{standalone}
+\usepackage[svgnames]{xcolor}
+\usepackage{tikz,pgfmath,scsnowman,tikzducks,bxcoloremoji}
+\colorlet{k}{black}
+\usescsnowmanlibrary{zrextra}
+\sczrextrasetup{bodyfill=white}
+\usepackage{endofdump}
+\endofdump
+\definecolor{myblue}{rgb}{0.55,0.65,0.90}
+\definecolor{mygreen}{rgb}{0.00,0.45,0.00}
+\definecolor{myorange}{rgb}{0.85,0.40,0.00}
+\definecolor{mycyan}{rgb}{0.50,1.00,1.00}
+\newcommand*{\cSnowman}[1]{%
+  \scsnowman[scale=14,shape=zrextra,
+    muffler=#1,hat=#1!70!k,buttons=myblue]}
+\begin{document}
+\begin{tikzpicture}[x=1bp, y=1bp,
+  myscl/.style={rotate=90},
+  myscr/.style={xscale=-1,rotate=90}]
+\useasboundingbox (0,0) rectangle (480,360);
+\fill[DarkGreen] (0,0) rectangle (480,20);
+\fill[SkyBlue!5] (0,20) rectangle (480,360);
+\shade[top color=SkyBlue!65, bottom color=SkyBlue!5]
+  (0,180) rectangle (480,360);
+\node[scale=2.5,rotate=-8] at (282,170) {\coloremojicode{1F643}};
+\node at (240,334) {\tikz[scale=18]{\duck}};
+\node[myscl] at (213,57) {\cSnowman{blue}};
+\node[myscr] at (267,131) {\cSnowman{mygreen}};
+\node[myscl] at (213,205) {\cSnowman{myorange}};
+\node[myscr] at (267,279) {\cSnowman{red}};
+\end{tikzpicture}
+\end{document}
